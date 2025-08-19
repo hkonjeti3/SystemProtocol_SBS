@@ -27,6 +27,8 @@ import com.securebanking.sbs.modules.customer.model.Transaction;
 import com.securebanking.sbs.modules.customer.model.Account;
 import com.securebanking.sbs.modules.customer.model.TransactionAuthorization;
 
+import java.math.BigDecimal;
+
 @Service
 public class RequestService implements IRequest {
 
@@ -59,6 +61,9 @@ public class RequestService implements IRequest {
     
     @Autowired
     private ActivityLogService activityLogService;
+    
+    @Autowired
+    private NotificationService notificationService;
 
 
     public List<UserProfileUpdateRequestDto> getPendingUpdateRequests() {
@@ -159,6 +164,34 @@ public class RequestService implements IRequest {
                     throw new RuntimeException("Receiver account not found with number: " + transactionDto.getReceiverAccountNumber());
                 }
                 
+                // VALIDATION: Check if both accounts are active
+                if (!"ACTIVE".equalsIgnoreCase(senderAcc.getStatus())) {
+                    throw new RuntimeException("Sender account is not active. Current status: " + senderAcc.getStatus());
+                }
+                
+                if (!"ACTIVE".equalsIgnoreCase(receiverAcc.getStatus())) {
+                    throw new RuntimeException("Receiver account is not active. Current status: " + receiverAcc.getStatus());
+                }
+                
+                // VALIDATION: Check if sender account has sufficient balance for DEBIT transactions
+                if ("DEBIT".equalsIgnoreCase(transactionDto.getTransactionType())) {
+                    try {
+                        BigDecimal senderBalance = new BigDecimal(senderAcc.getBalance());
+                        BigDecimal transactionAmount = new BigDecimal(transactionDto.getAmount());
+                        
+                        if (senderBalance.compareTo(transactionAmount) < 0) {
+                            throw new RuntimeException("Insufficient funds in sender account. Available: $" + senderBalance + ", Required: $" + transactionAmount);
+                        }
+                    } catch (NumberFormatException e) {
+                        throw new RuntimeException("Invalid amount format: " + transactionDto.getAmount());
+                    }
+                }
+                
+                // VALIDATION: Check if sender account belongs to the requesting user
+                if (!senderAcc.getUser().getUserId().equals(user.getUserId())) {
+                    throw new RuntimeException("Sender account does not belong to the requesting user");
+                }
+                
                 transaction.setSenderAcc(senderAcc);
                 transaction.setReceiverAcc(receiverAcc);
                 transaction.setUser(user);
@@ -185,6 +218,16 @@ public class RequestService implements IRequest {
                 transaction.setStatus(RequestStatus.PENDING.toString());
                 transaction.setLastModifiedtime(LocalDateTime.now());
                 transaction = transactionRepo.save(transaction);
+                
+                // ACTIVITY LOGGING: Log the transaction request creation
+                activityLogService.logActivity(
+                    user.getUserId(),
+                    "Transaction Request Created",
+                    "Transaction request created for " + transactionDto.getTransactionType() + " operation",
+                    "Amount: $" + transactionDto.getAmount() + ", Sender: " + senderAcc.getAccountNumber() + 
+                    ", Receiver: " + receiverAcc.getAccountNumber() + ", Status: PENDING"
+                );
+                
                 BeanUtils.copyProperties(transaction, transactionDto);
                 
             } catch (Exception e) {
@@ -262,12 +305,31 @@ public class RequestService implements IRequest {
                     throw new RuntimeException("Unsupported transaction type");
             }
             
-            // Log activity for transaction approval
+            // Log activity for transaction approval (Admin side)
             activityLogService.logActivity(
                 approver.getUserId(),
                 "Transaction Approved",
-                "Transaction " + transaction.getTransactionId() + " approved",
-                "Transaction Type: " + transaction.getTransactionType() + ", Amount: $" + transaction.getAmount()
+                "Transaction " + transaction.getTransactionId() + " approved by admin",
+                "Transaction Type: " + transaction.getTransactionType() + ", Amount: $" + transaction.getAmount() + 
+                ", Customer: " + transaction.getUser().getUsername()
+            );
+            
+            // Log activity for transaction approval (Customer side)
+            activityLogService.logActivity(
+                transaction.getUser().getUserId(),
+                "Transaction Approved",
+                "Your " + transaction.getTransactionType() + " transaction has been approved",
+                "Transaction ID: " + transaction.getTransactionId() + ", Amount: $" + transaction.getAmount() + 
+                ", Approved by: " + approver.getUsername()
+            );
+            
+            // Create notification for customer
+            notificationService.createNotification(
+                transaction.getUser().getUserId(),
+                "transaction_approved",
+                "Transaction Approved",
+                "Your " + transaction.getTransactionType() + " transaction of $" + transaction.getAmount() + " has been approved and completed.",
+                transaction.getTransactionId()
             );
             
             BeanUtils.copyProperties(transactionAuthorizationDto,transactionAuthorization);
@@ -292,12 +354,31 @@ public class RequestService implements IRequest {
             transactionAuthorization.setUser(approver);
             transactionAuthorization=transactionAuthorizationRepo.save(transactionAuthorization);
             
-            // Log activity for transaction rejection
+            // Log activity for transaction rejection (Admin side)
             activityLogService.logActivity(
                 approver.getUserId(),
                 "Transaction Rejected",
-                "Transaction " + transaction.getTransactionId() + " rejected",
-                "Transaction Type: " + transaction.getTransactionType() + ", Amount: $" + transaction.getAmount()
+                "Transaction " + transaction.getTransactionId() + " rejected by admin",
+                "Transaction Type: " + transaction.getTransactionType() + ", Amount: $" + transaction.getAmount() + 
+                ", Customer: " + transaction.getUser().getUsername()
+            );
+            
+            // Log activity for transaction rejection (Customer side)
+            activityLogService.logActivity(
+                transaction.getUser().getUserId(),
+                "Transaction Rejected",
+                "Your " + transaction.getTransactionType() + " transaction has been rejected",
+                "Transaction ID: " + transaction.getTransactionId() + ", Amount: $" + transaction.getAmount() + 
+                ", Rejected by: " + approver.getUsername()
+            );
+            
+            // Create notification for customer
+            notificationService.createNotification(
+                transaction.getUser().getUserId(),
+                "transaction_rejected",
+                "Transaction Rejected",
+                "Your " + transaction.getTransactionType() + " transaction of $" + transaction.getAmount() + " has been rejected.",
+                transaction.getTransactionId()
             );
             
             BeanUtils.copyProperties(transactionAuthorizationDto,transactionAuthorization);

@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-update-component',
   templateUrl: './customer-profile-update.component.html',
-  styleUrls: ['./update.component.css']
+  styleUrls: ['./customer-profile-update.component.css']
 })
 export class CustomerProfileUpdateComponent implements OnInit {
   updateForm!: FormGroup;

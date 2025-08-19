@@ -3,8 +3,8 @@
 <div class="account-page">
   <div class="container">
     <div class="page-header">
-      <h1><i class="pi pi-credit-card"></i> My Accounts</h1>
-      <p>Manage your banking accounts and view transaction history</p>
+      <h1><i class="pi pi-credit-card"></i> My Active Accounts</h1>
+      <p>Manage your active banking accounts and view transaction history</p>
     </div>
 
     <!-- Account Summary -->
@@ -16,6 +16,7 @@
         <div class="card-content">
           <h3>{{ accountSummary.totalAccounts || 0 }}</h3>
           <p>Total Accounts</p>
+          <small>Including deleted</small>
         </div>
       </div>
 
@@ -26,6 +27,7 @@
         <div class="card-content">
           <h3>${{ (accountSummary.totalBalance || 0).toFixed(2) }}</h3>
           <p>Total Balance</p>
+          <small>Active accounts only</small>
         </div>
       </div>
 
@@ -36,6 +38,7 @@
         <div class="card-content">
           <h3>{{ accountSummary.activeAccounts || 0 }}</h3>
           <p>Active Accounts</p>
+          <small>Currently available</small>
         </div>
       </div>
     </div>
@@ -67,6 +70,15 @@
 
     <!-- Accounts List -->
     <div class="accounts-grid" *ngIf="!loading && !errorMessage">
+      <!-- No Active Accounts Message -->
+      <div class="no-accounts" *ngIf="accounts.length === 0">
+        <i class="pi pi-info-circle"></i>
+        <h3>No Active Accounts</h3>
+        <p>You don't have any active accounts at the moment.</p>
+        <p>Create a new account to get started with your banking services.</p>
+      </div>
+
+      <!-- Active Accounts -->
       <div class="account-card" *ngFor="let account of accounts">
         <div class="account-header">
           <div class="account-type">
@@ -87,6 +99,15 @@
             <span class="label">Balance:</span>
             <span class="value">${{ parseBalance(account.balance).toFixed(2) }}</span>
           </div>
+        </div>
+
+        <!-- Delete Account Button - Only show for accounts with zero balance -->
+        <div class="account-actions" *ngIf="parseBalance(account.balance) === 0 && account.status === 'Active'">
+          <button class="delete-btn" (click)="openDeleteAccountModal(account)" 
+                  [disabled]="hasPendingDeletionRequest(account.accountId)">
+            <i class="pi pi-trash"></i>
+            {{ hasPendingDeletionRequest(account.accountId) ? 'Deletion Pending' : 'Request Deletion' }}
+          </button>
         </div>
       </div>
 
@@ -168,6 +189,50 @@
         <p>Loading requests...</p>
       </div>
     </div>
+
+    <!-- Account Deletion Requests Section -->
+    <div class="requests-section">
+      <div class="section-header">
+        <h2>Pending Account Deletion Requests</h2>
+      </div>
+      
+      <div class="requests-list" *ngIf="!loadingDeletionRequests">
+        <div class="request-item" *ngFor="let request of pendingDeletionRequests" [class]="getStatusClass(request.status)">
+          <div class="request-header">
+            <span class="request-type">{{ getAccountTypeDisplay(request.accountType) }}</span>
+            <span class="request-status">{{ request.status }}</span>
+          </div>
+          <div class="request-details">
+            <div class="detail-row">
+              <span class="label">Account Number:</span>
+              <span class="value">{{ request.accountNumber }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Current Balance:</span>
+              <span class="value">${{ parseBalance(request.currentBalance).toFixed(2) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Reason:</span>
+              <span class="value">{{ request.reason }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Date:</span>
+              <span class="value">{{ request.timestamp | date:'short' }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="no-requests" *ngIf="pendingDeletionRequests.length === 0">
+          <i class="pi pi-info-circle"></i>
+          <p>No pending account deletion requests found</p>
+        </div>
+      </div>
+      
+      <div class="loading" *ngIf="loadingDeletionRequests">
+        <i class="pi pi-spin pi-spinner"></i>
+        <p>Loading deletion requests...</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -210,6 +275,57 @@
         <button type="submit" class="btn btn-primary" [disabled]="!createAccountForm.valid || isCreating">
           <i class="pi pi-spin pi-spinner" *ngIf="isCreating"></i>
           {{ isCreating ? 'Submitting...' : 'Submit Request' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteAccountModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Request Account Deletion</h3>
+      <button class="close-btn" (click)="closeDeleteAccountModal()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+    
+    <form [formGroup]="deleteAccountForm" (ngSubmit)="submitDeletionRequest()" class="modal-body">
+      <div class="account-info">
+        <h4>Account Details</h4>
+        <div class="info-row">
+          <span class="label">Account Type:</span>
+          <span class="value">{{ selectedAccount?.accountType }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Account Number:</span>
+          <span class="value">{{ selectedAccount?.accountNumber }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Current Balance:</span>
+          <span class="value">${{ selectedAccount ? parseBalance(selectedAccount.balance).toFixed(2) : '0.00' }}</span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Reason for Deletion *</label>
+        <textarea formControlName="reason" class="form-control" 
+                  placeholder="Please provide a reason for deleting this account" rows="3"></textarea>
+      </div>
+      
+      <div class="warning-message">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p><strong>Warning:</strong> This action cannot be undone. Once approved, the account will be permanently deleted and all associated data will be lost.</p>
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeDeleteAccountModal()">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-danger" [disabled]="!deleteAccountForm.valid || isSubmittingDeletion">
+          <i class="pi pi-spin pi-spinner" *ngIf="isSubmittingDeletion"></i>
+          {{ isSubmittingDeletion ? 'Submitting...' : 'Submit Deletion Request' }}
         </button>
       </div>
     </form>

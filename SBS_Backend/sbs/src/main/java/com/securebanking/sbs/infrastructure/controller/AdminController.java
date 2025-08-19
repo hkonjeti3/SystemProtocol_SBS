@@ -3,12 +3,14 @@ package com.securebanking.sbs.infrastructure.controller;
 import com.securebanking.sbs.infrastructure.service.AdminService;
 import com.securebanking.sbs.shared.dto.UserDto;
 import com.securebanking.sbs.shared.model.User;
+import com.securebanking.sbs.core.util.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,9 @@ public class AdminController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminController.class);
 
     private final AdminService adminService;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Autowired
     public AdminController(AdminService adminService) {
@@ -53,7 +58,7 @@ public class AdminController {
 
     @PostMapping("/updateUserStatus")
     @CrossOrigin(origins = "*")
-    public ResponseEntity<?> updateUserStatus(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> updateUserStatus(@RequestBody Map<String, Object> request, HttpServletRequest httpRequest) {
         try {
             LOGGER.info("Request to update user status: {}", request);
             
@@ -67,7 +72,19 @@ public class AdminController {
                 return ResponseEntity.badRequest().body(errorResponse);
             }
             
-            UserDto updatedUser = adminService.updateUserStatus(userId, status);
+            // Extract admin user ID from JWT token
+            String token = extractToken(httpRequest);
+            if (token == null) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Unauthorized");
+                errorResponse.put("message", "No valid authentication token found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
+            
+            Integer adminUserId = jwtUtil.extractUserId(token).intValue();
+            LOGGER.info("Admin user ID extracted from token: {}", adminUserId);
+            
+            UserDto updatedUser = adminService.updateUserStatus(userId, status, adminUserId);
             LOGGER.info("Successfully updated user {} status to {}", userId, status);
             
             Map<String, Object> response = new HashMap<>();
@@ -84,5 +101,14 @@ public class AdminController {
             
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
+    
+    // Helper method to extract JWT token from request
+    private String extractToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 }

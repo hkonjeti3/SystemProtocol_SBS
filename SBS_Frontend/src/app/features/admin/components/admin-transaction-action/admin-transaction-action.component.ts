@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 @Component({
   selector: 'app-admin-transaction-action',
   templateUrl: './admin-transaction-action.component.html',
-  styleUrls: ['./transaction-action.component.css']
+  styleUrls: ['./admin-transaction-action.component.css']
 })
 export class AdminTransactionActionComponent implements OnInit {
   action: string | null = null;

@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { AccountService, AccountRequest } from '../../../../core/services/account.service';
 import { decodeToken } from '../../../../core/utils/jwt-helper';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-customer-account',
@@ -10,6 +12,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 })
 export class CustomerAccountComponent implements OnInit {
   accounts: any[] = [];
+  allAccounts: any[] = []; // Store all accounts including deleted ones
   accountSummary: any = {};
   loading: boolean = false;
   errorMessage: string = '';
@@ -18,6 +21,14 @@ export class CustomerAccountComponent implements OnInit {
   showCreateModal: boolean = false;
   isCreating: boolean = false;
   createAccountForm!: FormGroup;
+
+  // Account deletion request properties
+  showDeleteModal: boolean = false;
+  isSubmittingDeletion: boolean = false;
+  deleteAccountForm!: FormGroup;
+  selectedAccount: any = null;
+  pendingDeletionRequests: any[] = [];
+  loadingDeletionRequests: boolean = false;
 
   // User's account requests
   userAccountRequests: AccountRequest[] = [];
@@ -31,18 +42,27 @@ export class CustomerAccountComponent implements OnInit {
 
   constructor(
     private accountService: AccountService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
     this.loadAccounts();
     this.initCreateAccountForm();
+    this.initDeleteAccountForm();
+    this.loadDeletionRequests();
   }
 
   private initCreateAccountForm(): void {
     this.createAccountForm = this.formBuilder.group({
       accountType: ['', Validators.required],
       initialBalance: [0, [Validators.required, Validators.min(0)]],
+      reason: ['', Validators.required]
+    });
+  }
+
+  private initDeleteAccountForm(): void {
+    this.deleteAccountForm = this.formBuilder.group({
       reason: ['', Validators.required]
     });
   }
@@ -57,10 +77,14 @@ export class CustomerAccountComponent implements OnInit {
       if (decodedToken?.userId) {
         this.accountService.getUserAccounts(decodedToken.userId).subscribe({
           next: (accounts) => {
-            this.accounts = accounts;
+            // Filter to show only active accounts
+            this.accounts = accounts.filter((account: any) => 
+              account.status && account.status.toLowerCase() === 'active'
+            );
+            this.allAccounts = accounts; // Store all accounts
             this.calculateSummary();
             this.loading = false;
-            console.log('Accounts loaded:', accounts);
+            console.log('Active accounts loaded:', this.accounts);
           },
           error: (error) => {
             console.error('Error loading accounts:', error);
@@ -98,6 +122,79 @@ export class CustomerAccountComponent implements OnInit {
         });
       }
     }
+  }
+
+  private loadDeletionRequests(): void {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      const decodedToken = decodeToken(token);
+      if (decodedToken?.userId) {
+        this.loadingDeletionRequests = true;
+        this.http.get<any[]>(`${environment.apiUrl}/account-deletion/user/${decodedToken.userId}`).subscribe({
+          next: (requests) => {
+            this.pendingDeletionRequests = requests.filter(request => request.status === 'Pending');
+            this.loadingDeletionRequests = false;
+            console.log('Deletion requests loaded:', requests);
+          },
+          error: (error) => {
+            console.error('Error loading deletion requests:', error);
+            this.loadingDeletionRequests = false;
+          }
+        });
+      }
+    }
+  }
+
+  // Account deletion methods
+  openDeleteAccountModal(account: any): void {
+    this.selectedAccount = account;
+    this.deleteAccountForm.reset();
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteAccountModal(): void {
+    this.showDeleteModal = false;
+    this.selectedAccount = null;
+    this.deleteAccountForm.reset();
+  }
+
+  submitDeletionRequest(): void {
+    if (this.deleteAccountForm.valid && this.selectedAccount) {
+      this.isSubmittingDeletion = true;
+      
+      const token = localStorage.getItem('jwtToken');
+      if (token) {
+        const decodedToken = decodeToken(token);
+        if (decodedToken?.userId) {
+          const request = {
+            accountId: this.selectedAccount.accountId,
+            reason: this.deleteAccountForm.value.reason
+          };
+          
+          this.http.post<any>(`${environment.apiUrl}/account-deletion/request`, request).subscribe({
+            next: (response) => {
+              console.log('Deletion request submitted:', response);
+              this.isSubmittingDeletion = false;
+              this.closeDeleteAccountModal();
+              this.loadDeletionRequests(); // Refresh the list
+              this.loadAccounts(); // Refresh accounts to update UI
+              
+              // Show success message
+              alert('Account deletion request submitted successfully!');
+            },
+            error: (error) => {
+              console.error('Error submitting deletion request:', error);
+              this.isSubmittingDeletion = false;
+              alert('Error submitting deletion request: ' + (error.error || 'Unknown error'));
+            }
+          });
+        }
+      }
+    }
+  }
+
+  hasPendingDeletionRequest(accountId: number): boolean {
+    return this.pendingDeletionRequests.some(request => request.accountId === accountId);
   }
 
   private calculatePagination(): void {
@@ -157,7 +254,7 @@ export class CustomerAccountComponent implements OnInit {
     }, 0);
 
     this.accountSummary = {
-      totalAccounts: this.accounts.length,
+      totalAccounts: this.allAccounts.length, // Use allAccounts for total
       totalBalance: totalBalance,
       activeAccounts: this.accounts.filter(account => account.status === 'Active').length
     };

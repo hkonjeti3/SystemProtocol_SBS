@@ -133,8 +133,9 @@ export class AdminDashboardComponent implements OnInit {
         
         // Filter out duplicate login activities and convert to dashboard format
         const uniqueActivities = this.filterDuplicateActivities(activityLogs);
-        this.recentActivities = uniqueActivities
-          .slice(0, 10) // Limit to 10 most recent activities
+        const last24h = this.filterActivitiesLast24Hours(uniqueActivities);
+        this.recentActivities = last24h
+          .slice(0, 25)
           .map(log => this.activityService.convertToDashboardActivity(log));
         
         console.log('Converted user activities:', this.recentActivities);
@@ -166,9 +167,10 @@ export class AdminDashboardComponent implements OnInit {
       next: (activityLogs: ActivityLog[]) => {
         console.log('Loaded all user activity logs:', activityLogs);
         
-        // Convert activity logs to dashboard format
-        this.recentActivities = activityLogs
-          .slice(0, 10) // Limit to 10 most recent activities
+        // Filter by last 24 hours and convert to dashboard format
+        const last24h = this.filterActivitiesLast24Hours(activityLogs);
+        this.recentActivities = last24h
+          .slice(0, 25)
           .map(log => this.activityService.convertToDashboardActivity(log));
         
         console.log('Converted all user activities:', this.recentActivities);
@@ -187,9 +189,10 @@ export class AdminDashboardComponent implements OnInit {
       next: (activityLogs: ActivityLog[]) => {
         console.log('Loaded all activity logs:', activityLogs);
         
-        // Convert activity logs to dashboard format
-        this.recentActivities = activityLogs
-          .slice(0, 10) // Limit to 10 most recent activities
+        // Filter by last 24 hours and convert to dashboard format
+        const last24h = this.filterActivitiesLast24Hours(activityLogs);
+        this.recentActivities = last24h
+          .slice(0, 25)
           .map(log => this.activityService.convertToDashboardActivity(log));
         
         console.log('Converted all activities:', this.recentActivities);
@@ -199,6 +202,15 @@ export class AdminDashboardComponent implements OnInit {
         // Fallback to empty array if activity logs fail to load
         this.recentActivities = [];
       }
+    });
+  }
+
+  private filterActivitiesLast24Hours(activities: ActivityLog[]): ActivityLog[] {
+    const now = Date.now();
+    const cutoff = now - 24 * 60 * 60 * 1000;
+    return activities.filter((a) => {
+      const t = new Date((a as any).timestamp || (a as any).time || (a as any).createdAt).getTime();
+      return !isNaN(t) && t >= cutoff;
     });
   }
 

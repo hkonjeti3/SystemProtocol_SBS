@@ -3,16 +3,18 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { transaction } from './transaction'; // Adjust the import path as necessary
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
+
 export class CreditService {
-  private baseUrl = 'http://localhost:8081/api/v1/account/';
+  private baseUrl = `${environment.apiUrl}/account/`;
   constructor(private http: HttpClient) { }
 
   performTransaction(transactionType: 'CREDIT' | 'DEBIT', transactionData: transaction): Observable<any> {
-    const url = `${this.baseUrl}${transactionType}/request`;
+    const url = `${this.baseUrl}${transactionType.toLowerCase()}/request`;
     console.log('Sending transaction request:', transactionData, 'Type:', transactionType, 'URL:', url);
     
     // Get JWT token from localStorage

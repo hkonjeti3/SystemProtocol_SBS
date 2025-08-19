@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-customer-funds',
   templateUrl: './customer-funds.component.html',
-  styleUrls: ['./funds.component.css']
+  styleUrls: ['./customer-funds.component.css']
 })
 export class CustomerFundsComponent {
   constructor(private router: Router) {}

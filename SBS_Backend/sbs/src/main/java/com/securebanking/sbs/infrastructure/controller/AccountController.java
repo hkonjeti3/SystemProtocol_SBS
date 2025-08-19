@@ -5,7 +5,11 @@ import com.securebanking.sbs.infrastructure.service.RequestService;
 import com.securebanking.sbs.shared.dto.AccountDto;
 import com.securebanking.sbs.shared.dto.TransactionDto;
 import com.securebanking.sbs.infrastructure.repository.AccountRepo;
+import com.securebanking.sbs.core.util.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +35,11 @@ public class AccountController {
 
     @Autowired
     private RequestService requestService;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
     
     @PostMapping("/account/createAccount")
     public ResponseEntity<?> createAccount(@RequestBody AccountDto accountDto) {
@@ -65,7 +74,7 @@ public class AccountController {
     }
 
     @PutMapping("/account/updateStatus/{accountId}")
-    public ResponseEntity<?> updateAccountStatus(@PathVariable Long accountId, @RequestBody Map<String, String> request){
+    public ResponseEntity<?> updateAccountStatus(@PathVariable Long accountId, @RequestBody Map<String, String> request, HttpServletRequest httpRequest){
         try {
             String status = request.get("status");
             if (status == null) {
@@ -74,12 +83,23 @@ public class AccountController {
                 return ResponseEntity.badRequest().body(errorResponse);
             }
             
-            accountService.updateAccountStatus(accountId, status);
+            // Extract admin user ID from JWT token
+            String token = extractToken(httpRequest);
+            if (token == null) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Authentication required");
+                return ResponseEntity.status(401).body(errorResponse);
+            }
+            
+            Integer adminUserId = jwtUtil.extractUserId(token).intValue();
+            
+            accountService.updateAccountStatus(accountId, status, adminUserId);
             
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Account status updated successfully");
             response.put("accountId", accountId);
             response.put("status", status);
+            response.put("updatedBy", adminUserId);
             
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
@@ -140,5 +160,29 @@ public class AccountController {
             errorResponse.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
+    
+    // Helper method to extract token from request
+    private String extractToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        
+        if (bearerToken == null) {
+            logger.warn("No Authorization header found");
+            return null;
+        }
+        
+        if (!bearerToken.startsWith("Bearer ")) {
+            logger.warn("Invalid Authorization header format. Expected 'Bearer <token>'");
+            return null;
+        }
+        
+        String token = bearerToken.substring(7);
+        if (token.trim().isEmpty()) {
+            logger.warn("Empty token in Authorization header");
+            return null;
+        }
+        
+        logger.info("Token extracted successfully: {}", token.substring(0, Math.min(20, token.length())) + "...");
+        return token;
     }
 }

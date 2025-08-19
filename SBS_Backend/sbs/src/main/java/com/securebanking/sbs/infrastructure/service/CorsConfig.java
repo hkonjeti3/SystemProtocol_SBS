@@ -1,11 +1,21 @@
 package com.securebanking.sbs.infrastructure.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import com.securebanking.sbs.interceptor.RateLimitInterceptor;
+import com.securebanking.sbs.interceptor.JwtValidationInterceptor;
 
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
+
+    @Autowired
+    private RateLimitInterceptor rateLimitInterceptor;
+    
+    @Autowired
+    private JwtValidationInterceptor jwtValidationInterceptor;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -17,12 +27,17 @@ public class CorsConfig implements WebMvcConfigurer {
                 .maxAge(3600); // Max age of the CORS Preflight request
     }
 
-    // Rate limiting temporarily disabled for Kafka focus
-    // @Override
-    // public void addInterceptors(InterceptorRegistry registry) {
-    //     registry.addInterceptor(rateLimitInterceptor)
-    //             .addPathPatterns("/api/**")
-    //             .excludePathPatterns("/actuator/**", "/health");
-    // }
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        // Rate limiting interceptor
+        registry.addInterceptor(rateLimitInterceptor)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/actuator/**", "/health", "/login", "/register", "/test");
+        
+        // JWT validation interceptor
+        registry.addInterceptor(jwtValidationInterceptor)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/actuator/**", "/health", "/login", "/register", "/test");
+    }
 }
 

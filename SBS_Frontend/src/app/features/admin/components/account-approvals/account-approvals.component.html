@@ -6,9 +6,9 @@
     <div class="page-header">
       <h1>
         <i class="pi pi-credit-card"></i>
-        New Account Approvals
+        Account Approvals
       </h1>
-      <p>Review and manage pending account creation requests</p>
+      <p>Review and manage pending account creation and deletion requests</p>
     </div>
 
     <!-- Account Approvals Content -->
@@ -16,98 +16,193 @@
       <div class="account-approvals-card">
         <!-- Card Header -->
         <div class="card-header">
-          <h2>New Account Approvals</h2>
-          <button class="refresh-btn" (click)="loadPendingRequests()">
+          <h2>Account Approvals</h2>
+          <button class="refresh-btn" (click)="refreshAll()">
             <i class="pi pi-refresh"></i>
-            Refresh
+            Refresh All
           </button>
         </div>
 
-        <!-- Loading State -->
-        <div *ngIf="loading" class="loading-state">
-          <i class="pi pi-spinner pi-spin"></i>
-          <p>Loading pending account requests...</p>
-          <span>Please wait while we fetch the latest data</span>
-        </div>
+        <!-- Account Creation Requests Section -->
+        <div class="requests-section">
+          <div class="section-header">
+            <h3>Pending Account Creation Requests ({{ pendingAccountRequests.length }})</h3>
+          </div>
 
-        <!-- Error State -->
-        <div *ngIf="error && !loading" class="error-state">
-          <i class="pi pi-exclamation-triangle"></i>
-          <p>Error Loading Requests</p>
-          <span>{{ error }}</span>
-          <button class="retry-btn" (click)="loadPendingRequests()">
-            <i class="pi pi-refresh"></i>
-            Retry
-          </button>
-        </div>
+          <!-- Loading State for Account Creation -->
+          <div *ngIf="loading" class="loading-state">
+            <i class="pi pi-spinner pi-spin"></i>
+            <p>Loading pending account creation requests...</p>
+            <span>Please wait while we fetch the latest data</span>
+          </div>
 
-        <!-- No Requests State -->
-        <div *ngIf="!loading && !error && pendingRequests.length === 0" class="no-requests">
-          <i class="pi pi-check-circle"></i>
-          <p>No Pending Requests</p>
-          <span>All account creation requests have been processed</span>
-        </div>
+          <!-- Error State for Account Creation -->
+          <div *ngIf="error && !loading" class="error-state">
+            <i class="pi pi-exclamation-triangle"></i>
+            <p>Error Loading Requests</p>
+            <span>{{ error }}</span>
+            <button class="retry-btn" (click)="loadPendingRequests()">
+              <i class="pi pi-refresh"></i>
+              Retry
+            </button>
+          </div>
 
-        <!-- Requests Content -->
-        <div *ngIf="!loading && !error && pendingRequests.length > 0">
-          <!-- Requests List -->
-          <div class="requests-section">
-            <div class="requests-header">
-              <h3>Pending Account Creation Requests ({{ pendingRequests.length }})</h3>
+          <!-- No Account Creation Requests State -->
+          <div *ngIf="!loading && !error && pendingAccountRequests.length === 0" class="no-requests">
+            <i class="pi pi-check-circle"></i>
+            <p>No Pending Account Creation Requests</p>
+            <span>All account creation requests have been processed</span>
+          </div>
+
+          <!-- Account Creation Requests List -->
+          <div *ngIf="!loading && !error && pendingAccountRequests.length > 0" class="requests-list">
+            <div class="request-card" *ngFor="let request of pendingAccountRequests">
+              <div class="request-header">
+                <div class="request-id">
+                  <span class="label">ID:</span>
+                  <span class="value">{{ request.id || 'N/A' }}</span>
+                </div>
+                <div class="request-date">
+                  <span class="label">Date:</span>
+                  <span class="value">{{ request.timestamp ? formatDate(request.timestamp.toString()) : 'N/A' }}</span>
+                </div>
+                <div class="request-status">
+                  <span class="status-badge" [class]="getStatusClass(request.status)">
+                    {{ request.status.toUpperCase() }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="request-details">
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="label">User ID:</span>
+                    <span class="value">{{ request.userId }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="label">Account Type:</span>
+                    <span class="value">{{ request.accountType }}</span>
+                  </div>
+                </div>
+
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="label">Initial Balance:</span>
+                    <span class="value">${{ (request.initialBalance || 0).toFixed(2) }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="label">Reason:</span>
+                    <span class="value">{{ request.reason }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons for Account Creation -->
+              <div class="request-actions">
+                <button class="action-btn approve-btn" (click)="approveAccountRequest(request.id!)" [disabled]="!request.id">
+                  <i class="pi pi-check"></i>
+                  Approve
+                </button>
+                <button class="action-btn reject-btn" (click)="denyRequestWithReason(request.id!, 'creation')" [disabled]="!request.id">
+                  <i class="pi pi-times"></i>
+                  Deny
+                </button>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div class="requests-list">
-              <div class="request-card" *ngFor="let request of pendingRequests">
-                <div class="request-header">
-                  <div class="request-id">
-                    <span class="label">ID:</span>
-                    <span class="value">{{ request.id || 'N/A' }}</span>
+        <!-- Account Deletion Requests Section -->
+        <div class="requests-section">
+          <div class="section-header">
+            <h3>Pending Account Deletion Requests ({{ pendingDeletionRequests.length }})</h3>
+          </div>
+
+          <!-- Loading State for Account Deletion -->
+          <div *ngIf="loadingDeletions" class="loading-state">
+            <i class="pi pi-spinner pi-spin"></i>
+            <p>Loading pending account deletion requests...</p>
+            <span>Please wait while we fetch the latest data</span>
+          </div>
+
+          <!-- No Account Deletion Requests State -->
+          <div *ngIf="!loadingDeletions && pendingDeletionRequests.length === 0" class="no-requests">
+            <i class="pi pi-check-circle"></i>
+            <p>No Pending Account Deletion Requests</p>
+            <span>All account deletion requests have been processed</span>
+          </div>
+
+          <!-- Account Deletion Requests List -->
+          <div *ngIf="!loadingDeletions && pendingDeletionRequests.length > 0" class="requests-list">
+            <div class="request-card" *ngFor="let request of pendingDeletionRequests">
+              <div class="request-header">
+                <div class="request-id">
+                  <span class="label">ID:</span>
+                  <span class="value">{{ request.id || 'N/A' }}</span>
+                </div>
+                <div class="request-date">
+                  <span class="label">Date:</span>
+                  <span class="value">{{ request.timestamp ? formatDate(request.timestamp.toString()) : 'N/A' }}</span>
+                </div>
+                <div class="request-status">
+                  <span class="status-badge" [class]="getStatusClass(request.status)">
+                    {{ request.status.toUpperCase() }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="request-details">
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="label">User ID:</span>
+                    <span class="value">{{ request.userId }}</span>
                   </div>
-                  <div class="request-date">
-                    <span class="label">Date:</span>
-                    <span class="value">{{ request.timestamp ? formatDate(request.timestamp.toString()) : 'N/A' }}</span>
-                  </div>
-                  <div class="request-status">
-                    <span class="status-badge" [class]="getStatusClass(request.status)">
-                      {{ request.status.toUpperCase() }}
-                    </span>
+                  <div class="detail-item">
+                    <span class="label">Username:</span>
+                    <span class="value">{{ request.username || 'N/A' }}</span>
                   </div>
                 </div>
 
-                <div class="request-details">
-                  <div class="detail-row">
-                    <div class="detail-item">
-                      <span class="label">User ID:</span>
-                      <span class="value">{{ request.userId }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="label">Account Type:</span>
-                      <span class="value">{{ request.accountType }}</span>
-                    </div>
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="label">Account ID:</span>
+                    <span class="value">{{ request.accountId }}</span>
                   </div>
-
-                  <div class="detail-row">
-                    <div class="detail-item">
-                      <span class="label">Initial Balance:</span>
-                      <span class="value">{{ formatCurrency(request.initialBalance) }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="label">Reason:</span>
-                      <span class="value">{{ request.reason }}</span>
-                    </div>
+                  <div class="detail-item">
+                    <span class="label">Account Number:</span>
+                    <span class="value">{{ request.accountNumber }}</span>
                   </div>
                 </div>
 
-                <div class="request-actions">
-                  <button class="btn-approve" (click)="approveRequest(request.id!)" [disabled]="!request.id">
-                    <i class="pi pi-check"></i>
-                    Approve
-                  </button>
-                  <button class="btn-deny" (click)="denyRequestWithReason(request.id!)" [disabled]="!request.id">
-                    <i class="pi pi-times"></i>
-                    Deny
-                  </button>
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="label">Account Type:</span>
+                    <span class="value">{{ request.accountType }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="label">Current Balance:</span>
+                    <span class="value">${{ request.currentBalance }}</span>
+                  </div>
                 </div>
+
+                <div class="detail-row" *ngIf="request.reason">
+                  <div class="detail-item full-width">
+                    <span class="label">Reason for Deletion:</span>
+                    <span class="value">{{ request.reason }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons for Account Deletion -->
+              <div class="request-actions">
+                <button class="action-btn approve-btn" (click)="approveDeletionRequest(request.id)">
+                  <i class="pi pi-check"></i>
+                  Approve
+                </button>
+                <button class="action-btn reject-btn" (click)="openDeletionDenyModal(request.id)">
+                  <i class="pi pi-times"></i>
+                  Deny
+                </button>
               </div>
             </div>
           </div>
@@ -117,27 +212,69 @@
   </div>
 </div>
 
-<!-- Deny Reason Modal -->
+<!-- Deny Modal for Account Creation Requests -->
 <div class="modal-overlay" *ngIf="showDenyModal" (click)="closeDenyModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>Provide Denial Reason</h3>
-      <button class="modal-close" (click)="closeDenyModal()">
+      <button class="close-btn" (click)="closeDenyModal()">
         <i class="pi pi-times"></i>
       </button>
     </div>
     <div class="modal-body">
-      <p>Please provide a reason for denying this account creation request:</p>
-      <textarea 
-        [(ngModel)]="denyReason" 
-        placeholder="Enter denial reason..."
-        rows="4"
-        class="deny-reason-input"
-      ></textarea>
+      <p *ngIf="selectedRequestType === 'creation'">Please provide a reason for denying this account creation request:</p>
+      <p *ngIf="selectedRequestType === 'deletion'">Please provide a reason for denying this account deletion request:</p>
+      <div class="form-group">
+        <label for="denyReason">Enter denial reason:</label>
+        <textarea 
+          id="denyReason"
+          [(ngModel)]="denyReason" 
+          placeholder="Enter denial reason..."
+          rows="4"
+          class="form-control"
+          required></textarea>
+      </div>
+      <div class="error-message" *ngIf="error">{{ error }}</div>
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" (click)="closeDenyModal()">Cancel</button>
-      <button class="btn-confirm-deny" (click)="confirmDenyRequest()" [disabled]="!denyReason.trim()">
+      <button type="button" class="btn btn-secondary" (click)="closeDenyModal()">
+        Cancel
+      </button>
+      <button type="button" class="btn btn-danger" (click)="confirmDeny()" [disabled]="!denyReason.trim()">
+        Confirm Denial
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Deny Modal for Account Deletion Requests -->
+<div class="modal-overlay" *ngIf="showDeletionDenyModal" (click)="closeDeletionDenyModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Provide Denial Reason</h3>
+      <button class="close-btn" (click)="closeDeletionDenyModal()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Please provide a reason for denying this account deletion request:</p>
+      <div class="form-group">
+        <label for="deletionDenyReason">Enter denial reason:</label>
+        <textarea 
+          id="deletionDenyReason"
+          [(ngModel)]="deletionDenyReason" 
+          placeholder="Enter denial reason..."
+          rows="4"
+          class="form-control"
+          required></textarea>
+      </div>
+      <div class="error-message" *ngIf="deletionError">{{ deletionError }}</div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" (click)="closeDeletionDenyModal()">
+        Cancel
+      </button>
+      <button type="button" class="btn btn-danger" (click)="confirmDeletionDeny()" [disabled]="!deletionDenyReason.trim()">
         Confirm Denial
       </button>
     </div>

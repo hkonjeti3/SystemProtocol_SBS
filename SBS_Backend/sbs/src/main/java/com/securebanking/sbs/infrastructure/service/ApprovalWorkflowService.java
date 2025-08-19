@@ -266,18 +266,28 @@ public class ApprovalWorkflowService {
     public ProfileUpdateRequestDto approveProfileRequest(Integer requestId, Integer approverId) {
         logger.info("=== ApprovalWorkflowService.approveProfileRequest called for request ID: {} ===", requestId);
         
+        // Get the request and approver for logging and notifications
+        ProfileUpdateRequest request = profileUpdateRequestRepo.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile update request not found with id: " + requestId));
+        
+        User approver = userRepo.findById(approverId)
+                .orElseThrow(() -> new ResourceNotFoundException("Approver not found"));
+        
         // Use the ProfileUpdateRequestService to properly approve the request
         ProfileUpdateRequestDto approvedRequest = profileUpdateRequestService.approveProfileRequest(requestId);
         
         logger.info("ProfileUpdateRequestService.approveProfileRequest completed for request ID: {}", requestId);
         
-        // Get the approver for logging
-        User approver = userRepo.findById(approverId)
-                .orElseThrow(() -> new ResourceNotFoundException("Approver not found"));
+        // Log activity for admin
+        logActivity("Profile Update Approved", approverId, 
+                   "Profile update request " + requestId + " approved by " + approver.getUsername());
         
-        // Log activity
-        logActivity("Profile updated", approverId, 
-                   "Profile update approved by " + approver.getFirstName() + " " + approver.getLastName());
+        // Log activity for customer
+        logActivity("Profile Update Approved", request.getUserId(),
+                   "Your profile update request for " + request.getRequestType() + " has been approved. Approved by: " + approver.getFirstName() + " " + approver.getLastName());
+        
+        // Send notification to customer
+        sendProfileApprovalNotifications(request, approver, true);
         
         logger.info("=== ApprovalWorkflowService.approveProfileRequest completed successfully ===");
         return approvedRequest;
@@ -302,9 +312,13 @@ public class ApprovalWorkflowService {
             // Send notifications
             sendProfileApprovalNotifications(request, approver, false, reason);
             
-            // Log activity
-            logActivity("PROFILE_REJECTED", approverId, 
-                       "Profile update request " + requestId + " rejected by " + approver.getUsername());
+            // Log activity for admin
+            logActivity("Profile Update Rejected", approverId, 
+                       "Profile update request " + requestId + " rejected by " + approver.getUsername() + ". Reason: " + reason);
+            
+            // Log activity for customer
+            logActivity("Profile Update Rejected", request.getUserId(),
+                       "Your profile update request for " + request.getRequestType() + " has been rejected. Reason: " + reason + ". Rejected by: " + approver.getFirstName() + " " + approver.getLastName());
             
             return convertProfileRequestToDto(savedRequest);
         } catch (Exception e) {
@@ -596,6 +610,7 @@ public class ApprovalWorkflowService {
         dto.setUserId(request.getUserId());
         dto.setAccountType(request.getAccountType());
         dto.setInitialBalance(request.getInitialBalance());
+        dto.setReason(request.getReason()); // Add this line to include the reason
         dto.setStatus(request.getStatus());
         dto.setTimestamp(request.getTimestamp());
         

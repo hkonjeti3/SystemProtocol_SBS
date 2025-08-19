@@ -98,7 +98,7 @@ export class TransactionService {
   }
 
   approveTransaction(transactionId: number): Observable<any> {
-    const url = `${this.baseUrl}/transactions/approve/${transactionId}`;
+    const url = `${this.baseUrl}/approval/transaction/approve/${transactionId}`;
     
     // Get JWT token from localStorage
     const token = localStorage.getItem('jwtToken');
@@ -132,7 +132,7 @@ export class TransactionService {
   }
 
   rejectTransaction(transactionId: number): Observable<any> {
-    const url = `${this.baseUrl}/transactions/reject/${transactionId}`;
+    const url = `${this.baseUrl}/approval/transaction/reject/${transactionId}`;
     
     // Get JWT token from localStorage
     const token = localStorage.getItem('jwtToken');

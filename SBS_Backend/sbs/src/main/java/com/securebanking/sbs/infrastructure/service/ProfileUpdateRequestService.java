@@ -7,6 +7,7 @@ import com.securebanking.sbs.shared.model.User;
 import com.securebanking.sbs.infrastructure.repository.ProfileUpdateRequestRepo;
 import com.securebanking.sbs.infrastructure.repository.UserRepo;
 import com.securebanking.sbs.core.exception.ResourceNotFoundException;
+import com.securebanking.sbs.infrastructure.service.ActivityLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,9 @@ public class ProfileUpdateRequestService {
     
     @Autowired
     private UserRepo userRepo;
+    
+    @Autowired
+    private ActivityLogService activityLogService;
     
     // KafkaProducerService removed for Render deployment
     
@@ -44,6 +48,20 @@ public class ProfileUpdateRequestService {
         
         // Save the request
         ProfileUpdateRequest savedRequest = profileUpdateRequestRepo.save(request);
+        
+        // Log activity for customer
+        try {
+            activityLogService.logActivity(
+                requestDto.getUserId(),
+                "Profile Update Request Submitted",
+                "Profile update request submitted for " + requestDto.getRequestType(),
+                "Current Value: " + requestDto.getCurrentValue() + ", Requested Value: " + requestDto.getRequestedValue() + ", Reason: " + requestDto.getReason()
+            );
+            System.out.println("Activity logged for profile update request submission");
+        } catch (Exception e) {
+            System.out.println("Warning: Failed to log activity for submission: " + e.getMessage());
+            // Don't let activity logging failure rollback the entire transaction
+        }
         
         // Create notification for request submission
         try {
@@ -98,14 +116,8 @@ public class ProfileUpdateRequestService {
             
             System.out.println("User profile updated successfully");
             
-            // Publish notification event to Kafka
-            try {
-                createNotificationEvent(request, "approved");
-                System.out.println("Notification event created");
-            } catch (Exception e) {
-                System.out.println("Warning: Failed to create notification event: " + e.getMessage());
-                // Don't let notification failure rollback the entire transaction
-            }
+            // Note: Notifications are now handled by ApprovalWorkflowService to avoid duplicates
+            System.out.println("Profile update approved - notifications will be sent by ApprovalWorkflowService");
             
             ProfileUpdateRequestDto result = convertToDto(savedRequest);
             System.out.println("=== ProfileUpdateRequestService.approveProfileRequest completed successfully ===");
@@ -128,8 +140,8 @@ public class ProfileUpdateRequestService {
         request.setStatus("Rejected");
         ProfileUpdateRequest savedRequest = profileUpdateRequestRepo.save(request);
         
-        // Publish notification event to Kafka
-        createNotificationEvent(request, "rejected", reason);
+        // Note: Notifications are now handled by ApprovalWorkflowService to avoid duplicates
+        System.out.println("Profile update rejected - notifications will be sent by ApprovalWorkflowService");
         
         return convertToDto(savedRequest);
     }

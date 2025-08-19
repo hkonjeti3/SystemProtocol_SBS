@@ -22,7 +22,8 @@
       </div>
     </div>
 
-    <div class="dashboard-grid">
+    <!-- Top Row: Quick Actions + Account Summary (50-50 split) -->
+    <div class="dashboard-top-row">
       <!-- Quick Actions Card -->
       <div class="dashboard-card quick-actions">
         <div class="card-header">
@@ -70,15 +71,24 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Recent Activity Card -->
-      <div class="dashboard-card recent-activity">
+    <!-- Bottom Row: Recent Activity (full width) -->
+    <div class="dashboard-bottom-row">
+      <div class="dashboard-card recent-activity full-width">
         <div class="card-header">
           <i class="pi pi-clock"></i>
           <h3>Recent Activity</h3>
         </div>
         <div class="card-content">
           <div class="activity-list">
+            <!-- Loading State -->
+            <div class="loading-state" *ngIf="activityLoading">
+              <i class="pi pi-spin pi-spinner"></i>
+              <p>Loading activities...</p>
+            </div>
+            
+            <!-- Activities List -->
             <div class="activity-item" *ngFor="let activity of recentActivities; let i = index">
               <div class="activity-icon">
                 <i [class]="activity.icon"></i>
@@ -87,13 +97,16 @@
                 <div class="activity-title">{{ activity.title }}</div>
                 <div class="activity-time">{{ activity.time }}</div>
               </div>
-              <div class="activity-amount" [class]="activity.type">
+              <div class="activity-amount" [class]="activity.type" *ngIf="activity.amount">
                 {{ activity.amount }}
               </div>
             </div>
-            <div class="no-activity" *ngIf="!recentActivities || recentActivities.length === 0">
+            
+            <!-- No Activities State -->
+            <div class="no-activity" *ngIf="!activityLoading && (!recentActivities || recentActivities.length === 0)">
               <i class="pi pi-info-circle"></i>
-              <p>No recent activity</p>
+              <p>No recent activity in the last 24 hours</p>
+              <small>Your activities will appear here once you perform actions</small>
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@ import { UserService } from '../../core/services/user.service';
 @Component({
   selector: 'app-otp-verification',
   templateUrl: './auth-otp-verification.component.html',
-  styleUrls: ['./otp-verification.component.css']
+  styleUrls: ['./auth-otp-verification.component.css']
 })
 export class AuthOtpVerificationComponent implements OnInit {
   @Input() showOtpModal: boolean = false;

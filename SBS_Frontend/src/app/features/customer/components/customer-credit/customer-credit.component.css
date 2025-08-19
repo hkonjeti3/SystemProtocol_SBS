@@ -1,9 +1,9 @@
-/* Customer Credit Component Styles */
+/* Customer Credit Component Styles - Unified Design System */
 .credit-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  padding: 20px;
+  background: var(--primary-gradient);
+  font-family: var(--font-family);
+  padding: var(--spacing-xl);
 }
 
 .container {
@@ -14,36 +14,38 @@
 /* Page Header */
 .page-header {
   text-align: center;
-  margin-bottom: 40px;
-  color: white;
+  margin-bottom: var(--spacing-3xl);
+  color: var(--bg-primary);
 }
 
 .page-header h1 {
-  font-size: 36px;
-  font-weight: 700;
-  margin-bottom: 10px;
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 15px;
+  gap: var(--spacing-lg);
+  font-family: var(--font-family);
 }
 
 .page-header h1 i {
-  font-size: 32px;
+  font-size: var(--font-size-3xl);
   color: #ffd700;
 }
 
 .page-header p {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   opacity: 0.9;
   margin: 0;
+  font-family: var(--font-family);
 }
 
 /* Form Container */
 .form-container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: var(--bg-overlay);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
   overflow: hidden;
 }
@@ -53,228 +55,161 @@
 }
 
 .card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 30px;
+  background: var(--primary-gradient);
+  color: var(--bg-primary);
+  padding: var(--spacing-3xl);
   text-align: center;
 }
 
 .card-header h2 {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 10px 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 var(--spacing-md) 0;
+  font-family: var(--font-family);
 }
 
 .card-header p {
-  font-size: 16px;
+  font-size: var(--font-size-base);
   opacity: 0.9;
   margin: 0;
+  font-family: var(--font-family);
 }
 
 /* Transaction Form */
 .transaction-form {
-  padding: 40px;
+  padding: var(--spacing-3xl);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 25px;
-  margin-bottom: 25px;
+  gap: var(--spacing-2xl);
+  margin-bottom: var(--spacing-2xl);
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .form-group label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
+  gap: var(--spacing-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-family: var(--font-family);
 }
 
 .form-group label i {
-  color: #667eea;
-  font-size: 16px;
+  color: var(--primary-color);
+  font-size: var(--font-size-base);
 }
 
 .form-group input,
-.form-group select {
-  padding: 15px 16px;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  font-size: 16px;
-  background: white;
-  transition: all 0.3s ease;
-  font-family: inherit;
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 2px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-normal);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family);
 }
 
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-color);
+  background: var(--bg-primary);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   transform: translateY(-1px);
 }
 
-.form-group input::placeholder {
-  color: #999;
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
 }
 
-.form-group select {
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 12px center;
-  background-repeat: no-repeat;
-  background-size: 16px;
-  padding-right: 40px;
-}
-
-.form-group input.error,
-.form-group select.error {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+.form-group.error input,
+.form-group.error select,
+.form-group.error textarea {
+  border-color: var(--error-color);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 .error-message {
-  color: #dc3545;
-  font-size: 12px;
-  margin-top: 5px;
+  color: var(--error-color);
+  font-size: var(--font-size-xs);
+  margin-top: var(--spacing-xs);
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--spacing-xs);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family);
 }
 
-.error-message i {
-  font-size: 12px;
-}
-
-/* Form Actions */
-.form-actions {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  margin-top: 40px;
-  padding-top: 30px;
-  border-top: 2px solid #f0f0f0;
-}
-
-.btn-secondary,
-.btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 30px;
+/* Submit Button */
+.submit-btn {
+  background: var(--primary-gradient);
+  color: var(--bg-primary);
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
+  padding: var(--spacing-md) var(--spacing-3xl);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  min-width: 160px;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
   justify-content: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  font-family: var(--font-family);
 }
 
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.9);
-  color: #333;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.btn-secondary:hover {
-  background: white;
+.submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.submit-btn:active:not(:disabled) {
+  transform: translateY(-1px);
 }
 
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-}
-
-.btn-primary:disabled {
+.submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-.btn-secondary i,
-.btn-primary i {
-  font-size: 16px;
-}
-
-/* Success Message */
-.success-message {
-  background: #d4edda;
-  color: #155724;
-  padding: 15px 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  border: 1px solid #c3e6cb;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  animation: slideIn 0.3s ease;
-}
-
-.success-message i {
-  font-size: 18px;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Error Message */
-.error-message-global {
-  background: #f8d7da;
-  color: #721c24;
-  padding: 15px 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  border: 1px solid #f5c6cb;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  animation: slideIn 0.3s ease;
-}
-
-.error-message-global i {
-  font-size: 18px;
+.submit-btn i {
+  font-size: var(--font-size-base);
 }
 
 /* Loading State */
 .loading {
-  text-align: center;
-  padding: 40px;
-  color: #666;
+  opacity: 0.7;
+  pointer-events: none;
 }
 
-.loading i {
-  font-size: 24px;
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid var(--bg-primary);
+  border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-  display: block;
 }
 
 @keyframes spin {
@@ -282,82 +217,98 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Form Validation Styles */
-.form-group.ng-invalid.ng-touched input,
-.form-group.ng-invalid.ng-touched select {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+/* Success Message */
+.success-message {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  margin-top: var(--spacing-md);
+  text-align: center;
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family);
 }
 
-.form-group.ng-valid.ng-touched input,
-.form-group.ng-valid.ng-touched select {
-  border-color: #28a745;
-  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+/* Action buttons layout */
+.form-actions {
+  display: flex;
+  gap: var(--spacing-lg);
+  justify-content: center;
+  margin-top: var(--spacing-2xl);
+  padding-top: var(--spacing-xl);
+  border-top: 2px solid var(--bg-tertiary);
+}
+
+.form-actions .btn {
+  min-width: 160px;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-actions .btn:hover:not(:disabled) {
+  box-shadow: var(--shadow-md);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .credit-page {
-    padding: 15px;
-  }
-  
-  .page-header h1 {
-    font-size: 28px;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .transaction-form {
-    padding: 30px 20px;
+    padding: var(--spacing-md);
   }
   
   .form-row {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: var(--spacing-lg);
   }
   
-  .form-actions {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .btn-secondary,
-  .btn-primary {
-    width: 100%;
-    max-width: 250px;
+  .transaction-form {
+    padding: var(--spacing-xl);
   }
   
   .card-header {
-    padding: 25px 20px;
+    padding: var(--spacing-xl);
+  }
+  
+  .page-header h1 {
+    font-size: var(--font-size-3xl);
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .page-header p {
+    font-size: var(--font-size-base);
   }
 }
 
 @media (max-width: 480px) {
-  .page-header h1 {
-    font-size: 24px;
-  }
-  
-  .page-header p {
-    font-size: 16px;
-  }
-  
-  .card-header h2 {
-    font-size: 20px;
+  .credit-page {
+    padding: var(--spacing-sm);
   }
   
   .transaction-form {
-    padding: 20px 15px;
+    padding: var(--spacing-lg);
+  }
+  
+  .card-header {
+    padding: var(--spacing-lg);
+  }
+  
+  .page-header h1 {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .page-header p {
+    font-size: var(--font-size-sm);
   }
   
   .form-group input,
-  .form-group select {
-    padding: 12px 14px;
-    font-size: 14px;
+  .form-group select,
+  .form-group textarea {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
   }
   
-  .btn-secondary,
-  .btn-primary {
-    padding: 12px 20px;
-    font-size: 14px;
+  .submit-btn {
+    padding: var(--spacing-sm) var(--spacing-xl);
+    font-size: var(--font-size-sm);
   }
 }

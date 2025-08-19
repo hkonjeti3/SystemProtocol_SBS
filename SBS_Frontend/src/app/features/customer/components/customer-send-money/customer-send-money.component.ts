@@ -8,7 +8,7 @@ import { AccountService } from '../../../../core/services/account.service';
 @Component({
   selector: 'app-customer-send-money',
   templateUrl: './customer-send-money.component.html',
-  styleUrls: ['./send-money.component.css']
+  styleUrls: ['./customer-send-money.component.css']
 })
 export class CustomerSendMoneyComponent implements OnInit {
   sendForm: FormGroup;

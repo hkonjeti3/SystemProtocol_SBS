@@ -306,6 +306,11 @@ public class ApprovalWorkflowController {
             logger.info("=== Transaction approval request received for transaction ID: {} ===", transactionId);
             
             String token = extractToken(httpRequest);
+            if (token == null) {
+                logger.warn("No valid token found in request");
+                return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+            }
+            
             Integer approverId = jwtUtil.extractUserId(token).intValue();
             
             logger.info("Approver ID: {}", approverId);
@@ -316,7 +321,7 @@ public class ApprovalWorkflowController {
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             logger.error("Error in transaction approval for transaction ID {}: {}", transactionId, e.getMessage(), e);
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -329,6 +334,11 @@ public class ApprovalWorkflowController {
             logger.info("=== Transaction rejection request received for transaction ID: {} ===", transactionId);
             
             String token = extractToken(httpRequest);
+            if (token == null) {
+                logger.warn("No valid token found in request");
+                return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+            }
+            
             Integer approverId = jwtUtil.extractUserId(token).intValue();
             
             logger.info("Approver ID: {}", approverId);
@@ -340,7 +350,7 @@ public class ApprovalWorkflowController {
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             logger.error("Error in transaction rejection for transaction ID {}: {}", transactionId, e.getMessage(), e);
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
     

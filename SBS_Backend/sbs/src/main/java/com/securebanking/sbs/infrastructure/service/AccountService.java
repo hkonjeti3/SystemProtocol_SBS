@@ -101,8 +101,8 @@ public class AccountService {
         accountRepo.save(account);
     }
 
-    public void updateAccountStatus(Long accountId, String status) {
-        logger.info("Updating account {} status to: {}", accountId, status);
+    public void updateAccountStatus(Long accountId, String status, Integer adminUserId) {
+        logger.info("Updating account {} status to: {} by admin user: {}", accountId, status, adminUserId);
         
         Account account = accountRepo.findById(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found with id " + accountId));
@@ -119,12 +119,27 @@ public class AccountService {
             String description = String.format("Account #%s %s by admin", account.getAccountNumber(), 
                 status.equals("Active") ? "activated" : "deactivated");
             
-            // Log activity for the account owner
+            // Log activity for the account owner (customer)
             activityLogService.logActivity(
                 account.getUser().getUserId(),
                 action,
                 description,
                 String.format("Account status changed from %s to %s", previousStatus, status)
+            );
+            
+            // Log activity for the admin who performed the action
+            String adminAction = status.equals("Active") ? "Account Activation" : "Account Deactivation";
+            String adminDescription = String.format("Account #%s %s for user %s", 
+                account.getAccountNumber(), 
+                status.equals("Active") ? "activated" : "deactivated",
+                account.getUser().getUsername());
+            
+            activityLogService.logActivity(
+                adminUserId,
+                adminAction,
+                adminDescription,
+                String.format("Account %s status changed from %s to %s for user %s", 
+                    account.getAccountNumber(), previousStatus, status, account.getUser().getUsername())
             );
             
             // Send notification to account owner
@@ -140,7 +155,7 @@ public class AccountService {
                 accountId.intValue()
             );
             
-            logger.info("Activity logged and notification sent for account {} status change", accountId);
+            logger.info("Activity logged and notification sent for account {} status change by admin {}", accountId, adminUserId);
         } catch (Exception e) {
             logger.error("Failed to log activity or send notification for account {} status change: {}", accountId, e.getMessage());
         }
@@ -214,23 +229,69 @@ public class AccountService {
         Account senderAccount = transaction.getSenderAcc();
         Account receiverAccount = transaction.getReceiverAcc();
         BigDecimal amount = new BigDecimal(transaction.getAmount());
+        String transactionType = transaction.getTransactionType();
 
-        // Ensure there are sufficient funds
-        BigDecimal senderBalance = new BigDecimal(senderAccount.getBalance());
-        if (senderBalance.compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds");
+        if ("CREDIT".equalsIgnoreCase(transactionType)) {
+            // CREDIT transaction: Money flows INTO receiver account
+            // Sender account balance decreases, receiver account balance increases
+            
+            // Ensure sender has sufficient funds
+            BigDecimal senderBalance = new BigDecimal(senderAccount.getBalance());
+            if (senderBalance.compareTo(amount) < 0) {
+                throw new RuntimeException("Insufficient funds in sender account for CREDIT transaction");
+            }
+
+            // Debit from sender (decrease balance)
+            BigDecimal newSenderBalance = senderBalance.subtract(amount);
+            senderAccount.setBalance(newSenderBalance.toPlainString());
+            accountRepo.save(senderAccount);
+
+            // Credit to receiver (increase balance)
+            BigDecimal receiverBalance = new BigDecimal(receiverAccount.getBalance());
+            BigDecimal newReceiverBalance = receiverBalance.add(amount);
+            receiverAccount.setBalance(newReceiverBalance.toPlainString());
+            accountRepo.save(receiverAccount);
+
+        } else if ("DEBIT".equalsIgnoreCase(transactionType)) {
+            // DEBIT transaction: Money flows OUT OF sender account
+            // Sender account balance decreases, receiver account balance increases
+            
+            // Ensure sender has sufficient funds
+            BigDecimal senderBalance = new BigDecimal(senderAccount.getBalance());
+            if (senderBalance.compareTo(amount) < 0) {
+                throw new RuntimeException("Insufficient funds in sender account for DEBIT transaction");
+            }
+
+            // Debit from sender (decrease balance)
+            BigDecimal newSenderBalance = senderBalance.subtract(amount);
+            senderAccount.setBalance(newSenderBalance.toPlainString());
+            accountRepo.save(senderAccount);
+
+            // Credit to receiver (increase balance)
+            BigDecimal receiverBalance = new BigDecimal(receiverAccount.getBalance());
+            BigDecimal newReceiverBalance = receiverBalance.add(amount);
+            receiverAccount.setBalance(newReceiverBalance.toPlainString());
+            accountRepo.save(receiverAccount);
+
+        } else {
+            // Default behavior for other transaction types (e.g., TRANSFER_FUNDS)
+            // Ensure sender has sufficient funds
+            BigDecimal senderBalance = new BigDecimal(senderAccount.getBalance());
+            if (senderBalance.compareTo(amount) < 0) {
+                throw new RuntimeException("Insufficient funds");
+            }
+
+            // Debit from sender
+            BigDecimal newSenderBalance = senderBalance.subtract(amount);
+            senderAccount.setBalance(newSenderBalance.toPlainString());
+            accountRepo.save(senderAccount);
+
+            // Credit to receiver
+            BigDecimal receiverBalance = new BigDecimal(receiverAccount.getBalance());
+            BigDecimal newReceiverBalance = receiverBalance.add(amount);
+            receiverAccount.setBalance(newReceiverBalance.toPlainString());
+            accountRepo.save(receiverAccount);
         }
-
-        // Debit from sender
-        BigDecimal newSenderBalance = senderBalance.subtract(amount);
-        senderAccount.setBalance(newSenderBalance.toPlainString());
-        accountRepo.save(senderAccount);
-
-        // Credit to receiver
-        BigDecimal receiverBalance = new BigDecimal(receiverAccount.getBalance());
-        BigDecimal newReceiverBalance = receiverBalance.add(amount);
-        receiverAccount.setBalance(newReceiverBalance.toPlainString());
-        accountRepo.save(receiverAccount);
 
         // Update transaction status
         transaction.setStatus(ApprovalStatus.COMPLETED.toString());

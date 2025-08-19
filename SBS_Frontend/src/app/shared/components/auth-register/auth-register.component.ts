@@ -7,7 +7,7 @@ import { passwordMatchValidator } from '../../password-match.directive';
 @Component({
   selector: 'app-auth-register',
   templateUrl: './auth-register.component.html',
-  styleUrls: ['./register.component.css']
+  styleUrls: ['./auth-register.component.css']
 })
 export class AuthRegisterComponent {
   registerForm: FormGroup;

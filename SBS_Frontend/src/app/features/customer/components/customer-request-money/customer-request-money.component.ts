@@ -7,7 +7,7 @@ import { TransactionService } from '../../../../core/services/transaction.servic
 @Component({
   selector: 'app-customer-request-money',
   templateUrl: './customer-request-money.component.html',
-  styleUrls: ['./request-money.component.css']
+  styleUrls: ['./customer-request-money.component.css']
 })
 export class CustomerRequestMoneyComponent implements OnInit {
   requestForm: FormGroup;

@@ -1,13 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="stylesheet" href="login.component.css" /> 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Page Title</title>
-    
-</head>
-<body>
 <div class="login-page">
   <div class="login-container">
     <div class="login-card">
@@ -82,8 +72,11 @@
     <div class="circle circle-1"></div>
     <div class="circle circle-2"></div>
     <div class="circle circle-3"></div>
+    <div class="circle circle-4"></div>
+    <div class="circle circle-5"></div>
   </div>
 </div>
+
 <app-otp-verification
   *ngIf="showOtpModal"
   [showOtpModal]="showOtpModal"
@@ -91,5 +84,3 @@
   (otpVerified)="onOtpVerified($event)"
   (modalClosed)="onOtpModalClosed()"
 ></app-otp-verification>
-</body>
-</html>

@@ -4,18 +4,22 @@
     <div class="circle circle-1"></div>
     <div class="circle circle-2"></div>
     <div class="circle circle-3"></div>
+    <div class="circle circle-4"></div>
+    <div class="circle circle-5"></div>
+    <div class="circle circle-6"></div>
   </div>
 
   <div class="register-container">
     <div class="register-header">
       <div class="logo">
         <i class="pi pi-shield"></i>
-        <h1>Create Account</h1>
+        <h1>Register to Bank</h1>
       </div>
       <p class="register-subtitle">Join our secure banking system today</p>
     </div>
 
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <!-- Row 1: First Name + Last Name -->
       <div class="form-row">
         <div class="form-group">
           <label for="firstName" class="form-label">
@@ -28,7 +32,7 @@
               id="firstName"
               formControlName="firstName" 
               class="form-input"
-              placeholder="Enter your first name"
+              placeholder="Enter first name"
               [class.error]="firstName?.invalid && (firstName?.dirty || firstName?.touched)"
             />
             <i class="pi pi-user input-icon"></i>
@@ -36,7 +40,7 @@
           <div class="error-message" 
                *ngIf="firstName?.invalid && (firstName?.dirty || firstName?.touched)">
             <i class="pi pi-exclamation-triangle"></i>
-            <span *ngIf="firstName?.errors?.['required']">First name is required</span>
+            <span *ngIf="firstName?.errors?.['required']">Required</span>
           </div>
         </div>
 
@@ -51,7 +55,7 @@
               id="lastName"
               formControlName="lastName"
               class="form-input"
-              placeholder="Enter your last name"
+              placeholder="Enter last name"
               [class.error]="lastName?.invalid && (lastName?.dirty || lastName?.touched)"
             />
             <i class="pi pi-user input-icon"></i>
@@ -61,112 +65,119 @@
             class="error-message"
           >
             <i class="pi pi-exclamation-triangle"></i>
-            <span *ngIf="lastName?.errors?.['required']">Last name is required</span>
+            <span *ngIf="lastName?.errors?.['required']">Required</span>
           </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="username" class="form-label">
-          <i class="pi pi-at"></i>
-          Username
-        </label>
-        <div class="input-wrapper">
-          <input
-            type="text"
-            id="username"
-            formControlName="username"
-            class="form-input"
-            placeholder="Choose a username"
-            [class.error]="username?.invalid && (username?.dirty || username?.touched)"
-          />
-          <i class="pi pi-at input-icon"></i>
+      <!-- Row 2: Username + Email -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="username" class="form-label">
+            <i class="pi pi-at"></i>
+            Username
+          </label>
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
+              class="form-input"
+              placeholder="Choose username"
+              [class.error]="username?.invalid && (username?.dirty || username?.touched)"
+            />
+            <i class="pi pi-at input-icon"></i>
+          </div>
+          <div 
+            *ngIf="username?.invalid && (username?.dirty || username?.touched)"
+            class="error-message"
+          >
+            <i class="pi pi-exclamation-triangle"></i>
+            <span *ngIf="username?.errors?.['required']">Required</span>
+          </div>
         </div>
-        <div 
-          *ngIf="username?.invalid && (username?.dirty || username?.touched)"
-          class="error-message"
-        >
-          <i class="pi pi-exclamation-triangle"></i>
-          <span *ngIf="username?.errors?.['required']">Username is required</span>
+
+        <div class="form-group">
+          <label for="email" class="form-label">
+            <i class="pi pi-envelope"></i>
+            Email
+          </label>
+          <div class="input-wrapper">
+            <input
+              type="email"
+              id="email"
+              formControlName="emailAddress"
+              class="form-input"
+              placeholder="Enter email"
+              [class.error]="email?.invalid && (email?.dirty || email?.touched)"
+            />
+            <i class="pi pi-envelope input-icon"></i>
+          </div>
+          <div 
+            *ngIf="email?.invalid && (email?.dirty || email?.touched)"
+            class="error-message"
+          >
+            <i class="pi pi-exclamation-triangle"></i>
+            <span *ngIf="email?.errors?.['required']">Required</span>
+            <span *ngIf="email?.errors?.['email']">Invalid email</span>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="email" class="form-label">
-          <i class="pi pi-envelope"></i>
-          Email Address
-        </label>
-        <div class="input-wrapper">
-          <input
-            type="email"
-            id="email"
-            formControlName="emailAddress"
-            class="form-input"
-            placeholder="Enter your email address"
-            [class.error]="email?.invalid && (email?.dirty || email?.touched)"
-          />
-          <i class="pi pi-envelope input-icon"></i>
+      <!-- Row 3: Phone + Address -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="phoneNumber" class="form-label">
+            <i class="pi pi-phone"></i>
+            Phone
+          </label>
+          <div class="input-wrapper">
+            <input
+              type="tel"
+              id="phoneNumber"
+              formControlName="phoneNumber"
+              class="form-input"
+              placeholder="Enter phone"
+              [class.error]="phoneNumber?.invalid && (phoneNumber?.dirty || phoneNumber?.touched)"
+            />
+            <i class="pi pi-phone input-icon"></i>
+          </div>
+          <div 
+            *ngIf="phoneNumber?.invalid && (phoneNumber?.dirty || phoneNumber?.touched)"
+            class="error-message"
+          >
+            <i class="pi pi-exclamation-triangle"></i>
+            <span *ngIf="phoneNumber?.errors?.['required']">Required</span>
+          </div>
         </div>
-        <div 
-          *ngIf="email?.invalid && (email?.dirty || email?.touched)"
-          class="error-message"
-        >
-          <i class="pi pi-exclamation-triangle"></i>
-          <span *ngIf="email?.errors?.['required']">Email is required</span>
-          <span *ngIf="email?.errors?.['email']">Please enter a valid email</span>
+
+        <div class="form-group">
+          <label for="address" class="form-label">
+            <i class="pi pi-map-marker"></i>
+            Address
+          </label>
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="address"
+              formControlName="address"
+              class="form-input"
+              placeholder="Enter address"
+              [class.error]="address?.invalid && (address?.dirty || address?.touched)"
+            />
+            <i class="pi pi-map-marker input-icon"></i>
+          </div>
+          <div 
+            *ngIf="address?.invalid && (address?.dirty || address?.touched)"
+            class="error-message"
+          >
+            <i class="pi pi-exclamation-triangle"></i>
+            <span *ngIf="address?.errors?.['required']">Required</span>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="phoneNumber" class="form-label">
-          <i class="pi pi-phone"></i>
-          Phone Number
-        </label>
-        <div class="input-wrapper">
-          <input
-            type="tel"
-            id="phoneNumber"
-            formControlName="phoneNumber"
-            class="form-input"
-            placeholder="Enter your phone number"
-            [class.error]="phoneNumber?.invalid && (phoneNumber?.dirty || phoneNumber?.touched)"
-          />
-          <i class="pi pi-phone input-icon"></i>
-        </div>
-        <div 
-          *ngIf="phoneNumber?.invalid && (phoneNumber?.dirty || phoneNumber?.touched)"
-          class="error-message"
-        >
-          <i class="pi pi-exclamation-triangle"></i>
-          <span *ngIf="phoneNumber?.errors?.['required']">Phone number is required</span>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="address" class="form-label">
-          <i class="pi pi-map-marker"></i>
-          Address
-        </label>
-        <div class="input-wrapper">
-          <input
-            type="text"
-            id="address"
-            formControlName="address"
-            class="form-input"
-            placeholder="Enter your address"
-            [class.error]="address?.invalid && (address?.dirty || address?.touched)"
-          />
-          <i class="pi pi-map-marker input-icon"></i>
-        </div>
-        <div 
-          *ngIf="address?.invalid && (address?.dirty || address?.touched)"
-          class="error-message"
-        >
-          <i class="pi pi-exclamation-triangle"></i>
-          <span *ngIf="address?.errors?.['required']">Address is required</span>
-        </div>
-      </div>
-
+      <!-- Row 4: Password + Confirm Password -->
       <div class="form-row">
         <div class="form-group">
           <label for="password" class="form-label">
@@ -179,7 +190,7 @@
               id="password"
               formControlName="password"
               class="form-input"
-              placeholder="Create a password"
+              placeholder="Create password"
               [class.error]="password?.invalid && (password?.dirty || password?.touched)"
             />
             <i class="pi pi-lock input-icon"></i>
@@ -189,15 +200,15 @@
             class="error-message"
           >
             <i class="pi pi-exclamation-triangle"></i>
-            <span *ngIf="password?.errors?.['required']">Password is required</span>
-            <span *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</span>
+            <span *ngIf="password?.errors?.['required']">Required</span>
+            <span *ngIf="password?.errors?.['minlength']">Min 6 chars</span>
           </div>
         </div>
 
         <div class="form-group">
           <label for="confirmPassword" class="form-label">
             <i class="pi pi-lock"></i>
-            Confirm Password
+            Confirm
           </label>
           <div class="input-wrapper">
             <input
@@ -205,7 +216,7 @@
               id="confirmPassword"
               formControlName="confirmPassword"
               class="form-input"
-              placeholder="Confirm your password"
+              placeholder="Confirm password"
               [class.error]="confirmPassword?.invalid && (confirmPassword?.dirty || confirmPassword?.touched)"
             />
             <i class="pi pi-lock input-icon"></i>
@@ -215,8 +226,8 @@
             class="error-message"
           >
             <i class="pi pi-exclamation-triangle"></i>
-            <span *ngIf="confirmPassword?.errors?.['required']">Please confirm your password</span>
-            <span *ngIf="confirmPassword?.errors?.['passwordMismatch']">Passwords do not match</span>
+            <span *ngIf="confirmPassword?.errors?.['required']">Required</span>
+            <span *ngIf="confirmPassword?.errors?.['passwordMismatch']">No match</span>
           </div>
         </div>
       </div>
@@ -228,7 +239,7 @@
         [disabled]="registerForm.invalid || isLoading"
       >
         <i class="pi" [class.pi-spinner]="isLoading" [class.pi-user-plus]="!isLoading"></i>
-        {{ isLoading ? 'Creating Account...' : 'Create Account' }}
+        {{ isLoading ? 'Creating...' : 'Create Account' }}
       </button>
     </form>
 
